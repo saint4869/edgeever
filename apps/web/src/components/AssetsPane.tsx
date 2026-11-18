@@ -1,7 +1,12 @@
-import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { DeferredToolLoading } from "./DeferredToolLoading";
+import Lightbox from "yet-another-react-lightbox";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
+
+import "yet-another-react-lightbox/styles.css";
+import "yet-another-react-lightbox/plugins/thumbnails.css";
 
 import {
   Paperclip,
@@ -22,16 +27,13 @@ import { formatDateTime } from "@/lib/utils";
 import { WORKSPACE_PAGE_TITLE_CLASSNAME } from "@/lib/workspace-ui";
 import type { EdgeEverRepository } from "@/lib/repository";
 import { isPdfAttachment, type ResourceListItem } from "@edgeever/shared";
-
+import { PdfViewer } from "@/components/pdf/PdfViewer";
 import { PdfThumbnail } from "@/components/pdf/PdfThumbnail";
 import { AttachmentFileIcon } from "@/components/attachments/AttachmentFileIcon";
 import { AppConfirmDialog } from "@/components/dialogs/ConfirmDialogs";
 import { ExecutionCenterButton } from "@/components/execution/ExecutionCenterButton";
 
 import { formatBytes } from "@/lib/format-bytes";
-
-const PdfViewer = lazy(() => import("@/components/pdf/PdfViewer").then((module) => ({ default: module.PdfViewer })));
-const AssetLightbox = lazy(() => import("./AssetLightbox").then((module) => ({ default: module.AssetLightbox })));
 
 export { formatBytes } from "@/lib/format-bytes";
 
@@ -490,29 +492,26 @@ export const AssetsPane = ({ onClose, repository, onOpenExecutionCenter }: Asset
 
       {/* Lightbox Viewer */}
       {lightboxIndex !== null && (
-        <Suspense fallback={<DeferredToolLoading />}>
-          <AssetLightbox
-            index={lightboxIndex}
-            slides={slides}
-            open={lightboxIndex !== null}
-            close={() => setLightboxIndex(null)}
-          />
-        </Suspense>
+        <Lightbox
+          index={lightboxIndex}
+          slides={slides}
+          open={lightboxIndex !== null}
+          close={() => setLightboxIndex(null)}
+          plugins={[Zoom, Thumbnails]}
+        />
       )}
       {pdfPreview ? (
-        <Suspense fallback={<DeferredToolLoading />}>
-          <PdfViewer
-            key={pdfPreview.id}
-            url={pdfPreview.url}
-            label={pdfPreview.filename || pdfPreview.id}
-            filename={pdfPreview.filename || undefined}
-            byteSize={pdfPreview.byteSize}
-            fullscreen
-            onRequestClose={() => setPdfPreview(null)}
-            onPrevious={pdfResources.length > 1 ? showPreviousPdf : undefined}
-            onNext={pdfResources.length > 1 ? showNextPdf : undefined}
-          />
-        </Suspense>
+        <PdfViewer
+          key={pdfPreview.id}
+          url={pdfPreview.url}
+          label={pdfPreview.filename || pdfPreview.id}
+          filename={pdfPreview.filename || undefined}
+          byteSize={pdfPreview.byteSize}
+          fullscreen
+          onRequestClose={() => setPdfPreview(null)}
+          onPrevious={pdfResources.length > 1 ? showPreviousPdf : undefined}
+          onNext={pdfResources.length > 1 ? showNextPdf : undefined}
+        />
       ) : null}
       {deleteTarget ? (
         <AppConfirmDialog
